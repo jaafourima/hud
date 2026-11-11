@@ -1,59 +1,52 @@
 # hud
 
-A self-hosted "status window" for your real life: health, fitness, nutrition, sleep, and phone + PC screen time in one Grafana dashboard. Everything stays on your own devices, no cloud.
+A self-hosted, plugin-based status window for your life: sleep, workouts, meals and calories, weight, phone and PC usage, habits, and whatever else you add. Local-first apps, one server you own, your data in Postgres where Grafana can read it.
+
+> **Status: early development.** Milestone M0 (foundations) is done; M1 (core, local store, desktop shell) is in progress. See the [milestones](https://github.com/jaafourima/hud/milestones).
+
+## Goals
+
+- **One app, many domains.** Each domain is a compile-time plugin behind a shared trait, so new areas don't touch the core ([ADR-0004](docs/adr/0004-plugins.md)).
+- **Local-first.** Every device works offline on SQLite and syncs to your server ([ADR-0003](docs/adr/0003-sync.md)).
+- **Multi-user, self-hostable.** One `docker compose up` for server + TimescaleDB + Grafana.
+- **Rust everywhere.** Axum server, Dioxus desktop and Android UI, with a thin Kotlin shim for Android-only APIs ([ADR-0002](docs/adr/0002-stack.md)).
+- **Keeps what works.** Grafana, Health Connect, Open Food Facts/USDA, Tailscale/WireGuard are integrated, not rebuilt.
+
+## Architecture
 
 ```
-PHONE                                   NAS
-Chompass ─┐                             ┌─ n8n webhook workflow ─┐
-openGym ──┼─> Health Connect ─> HC Webhook ──POST──┘            │
-Plees ────────> folder ─┐                                       ├─> Postgres ─> Grafana
-openGym backup JSON ────┼──> Syncthing ──> NAS sync folder ──> n8n file workflow ─┘
-PC                      │
-ActivityWatch ─> systemd timer ─> daily JSON export ─┘
+ Desktop app (Dioxus) ─┐                       ┌─> TimescaleDB/Postgres ─> Grafana
+ Android app (Dioxus   ├─ SQLite + op log ─sync┤
+   + Kotlin shim)      │                       └─ hud-server (Axum): auth, sync, food DB
+ Linux agent ──────────┘
 ```
 
-Full design, app choices and known caveats: [docs/brief.md](docs/brief.md).
+Workspace: `crates/` (core, store, sync, server, ui), `apps/` (desktop, android, agent), `plugins/` (body, sleep, workouts, nutrition, ...), `deploy/`. Crates appear as their milestones land.
 
-## Status
+## Roadmap
 
-- [x] Postgres schema with upsert keys (`db/migrations/001_init.sql`)
-- [x] NAS stack: Postgres + n8n + Grafana (`nas/docker-compose.yml`)
-- [x] PC ActivityWatch exporter + systemd timer (`pc/`)
-- [ ] n8n workflow A: Health Connect webhook ingest
-- [ ] n8n workflow B: Syncthing file ingest
-- [ ] Grafana provisioning + dashboard
-- [ ] Syncthing / phone app setup docs
-
-See the open issues for the backlog.
-
-## Layout
-
-| Path | What |
+| | Milestone |
 |---|---|
-| `nas/` | `docker-compose.yml` and `.env.example` for the NAS services |
-| `db/migrations/` | SQL run on first Postgres start; every table upserts on a natural key |
-| `pc/` | `aw_export.py` (stdlib only) and the systemd user units that run it daily |
-| `docs/` | Project brief |
+| M0 | Reset, license, CI, ADRs (done) |
+| M1 | Core, local store, desktop shell, weight tracking |
+| M2 | Server, auth, sync, Grafana connection |
+| M3 | Sleep (toggleable sources) |
+| M4 | Workouts |
+| M5 | Nutrition (barcode, recipes, adaptive target) |
+| M6 | Android app, Health Connect, **v1.0** |
+| M7 | Screen time (Linux agent, Android) |
+| M8 | Usage limits |
+| M9 | Habits |
+| M10 | AI meal photos, sensor-based sleep |
 
-## Quickstart
+## Development
 
 ```sh
-# NAS
-cd nas && cp .env.example .env   # fill in passwords
-docker compose up -d             # Postgres :5432, n8n :5678, Grafana :3000 (LAN only)
-
-# PC: export yesterday's ActivityWatch data every day
-mkdir -p ~/.config/systemd/user
-cp pc/hud-aw-export.* ~/.config/systemd/user/
-# edit the ExecStart path and SYNC_DIR in the .service file, then:
-systemctl --user enable --now hud-aw-export.timer
-
-# backfill or resend a day
-python3 pc/aw_export.py --date 2026-11-10 --out ~/Sync/hud/activitywatch
+cargo fmt --all --check
+cargo clippy --workspace --all-targets -- -D warnings
+cargo test --workspace
 ```
 
-## Design notes
+## License
 
-- **Idempotent ingest.** Every table has a unique key (`date`/`ts` + `source`), so resending overlapping ranges upserts instead of duplicating. This matters because HC Webhook never retries failed requests.
-- **LAN only.** Service ports bind to `HUD_BIND_ADDR`; reach the NAS from outside over Tailscale/WireGuard.
-- **No secrets in git.** `.env` is ignored; only `.env.example` is committed.
+[AGPL-3.0-or-later](LICENSE). Code ported from other projects is credited in [docs/THIRD_PARTY.md](docs/THIRD_PARTY.md). The original integration-based design is kept in [docs/history/brief.md](docs/history/brief.md).

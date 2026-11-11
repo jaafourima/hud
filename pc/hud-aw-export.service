@@ -1,8 +1,0 @@
-[Unit]
-Description=Export yesterday's ActivityWatch data for hud
-
-[Service]
-Type=oneshot
-# Adjust both paths to your checkout and Syncthing folder.
-Environment=HUD_SYNC_DIR=%h/Sync/hud
-ExecStart=/usr/bin/python3 %h/Documents/coding/hud/pc/aw_export.py
