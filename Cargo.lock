@@ -243,6 +243,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "hud-plugin-body"
+version = "0.1.0"
+dependencies = [
+ "hud-core",
+ "hud-store",
+ "serde_json",
+ "thiserror",
+]
+
+[[package]]
 name = "hud-store"
 version = "0.1.0"
 dependencies = [
