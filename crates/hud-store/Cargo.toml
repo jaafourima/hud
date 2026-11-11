@@ -1,0 +1,21 @@
+[package]
+name = "hud-store"
+description = "Local-first SQLite store: plugin migrations, op log and outbox"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+hud-core = { version = "0.1.0", path = "../hud-core" }
+rusqlite = { version = "0.41", features = ["bundled"] }
+serde_json = "1.0.154"
+thiserror = "2.0.21"
+
+[dev-dependencies]
+proptest = "1.11.0"
+tempfile = "3.27.0"

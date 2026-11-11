@@ -1,13 +1,13 @@
 [workspace]
 resolver = "2"
-members = ["crates/*"]
+members = ["crates/*", "plugins/*", "apps/*"]
 
 [workspace.package]
 version = "0.1.0"
 edition = "2024"
 license = "AGPL-3.0-or-later"
 repository = "https://github.com/jaafourima/hud"
-rust-version = "1.85"
+rust-version = "1.89"
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

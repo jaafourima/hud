@@ -3,8 +3,15 @@
 allow = [
   "MIT", "Apache-2.0", "Apache-2.0 WITH LLVM-exception", "BSD-2-Clause", "BSD-3-Clause",
   "ISC", "Unicode-3.0", "Zlib", "MPL-2.0", "CC0-1.0", "AGPL-3.0-or-later", "AGPL-3.0-only",
-  "GPL-3.0-or-later", "GPL-3.0-only", "0BSD", "BSL-1.0",
+  "GPL-3.0-or-later", "GPL-3.0-only", "0BSD", "BSL-1.0", "NCSA",
 ]
 
 [advisories]
 version = 2
+# "Unmaintained" notices (not vulnerabilities) for transitive crates of the Dioxus/wry/GTK
+# stack that we can't replace ourselves. Revisit on each Dioxus upgrade.
+ignore = [
+  { id = "RUSTSEC-2025-0057", reason = "fxhash: transitive via dioxus desktop stack" },
+  { id = "RUSTSEC-2024-0436", reason = "paste: transitive via dioxus/gtk stack" },
+  { id = "RUSTSEC-2024-0370", reason = "proc-macro-error: transitive via gtk-rs stack" },
+]

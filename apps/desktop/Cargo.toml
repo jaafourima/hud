@@ -1,0 +1,18 @@
+[package]
+name = "hud-desktop"
+description = "hud desktop app"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+dioxus = { version = "0.7", features = ["desktop"] }
+hud-core = { version = "0.1.0", path = "../../crates/hud-core" }
+hud-plugin-body = { version = "0.1.0", path = "../../plugins/body", features = ["ui"] }
+hud-store = { version = "0.1.0", path = "../../crates/hud-store" }
+hud-ui = { version = "0.1.0", path = "../../crates/hud-ui" }
