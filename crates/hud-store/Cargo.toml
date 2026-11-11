@@ -12,7 +12,7 @@ workspace = true
 
 [dependencies]
 hud-core = { version = "0.1.0", path = "../hud-core" }
-rusqlite = { version = "0.40.2", features = ["bundled"] }
+rusqlite = { version = "0.41", features = ["bundled"] }
 serde_json = "1.0.154"
 thiserror = "2.0.21"
 

@@ -8,3 +8,10 @@ allow = [
 
 [advisories]
 version = 2
+# "Unmaintained" notices (not vulnerabilities) for transitive crates of the Dioxus/wry/GTK
+# stack that we can't replace ourselves. Revisit on each Dioxus upgrade.
+ignore = [
+  { id = "RUSTSEC-2025-0057", reason = "fxhash: transitive via dioxus desktop stack" },
+  { id = "RUSTSEC-2024-0436", reason = "paste: transitive via dioxus/gtk stack" },
+  { id = "RUSTSEC-2024-0370", reason = "proc-macro-error: transitive via gtk-rs stack" },
+]
