@@ -2,7 +2,7 @@
 
 A self-hosted, plugin-based status window for your life: sleep, workouts, meals and calories, weight, phone and PC usage, habits, and whatever else you add. Local-first apps, one server you own, your data in Postgres where Grafana can read it.
 
-> **Status: early development.** Milestone M0 (foundations) is done; M1 (core, local store, desktop shell) is in progress. See the [milestones](https://github.com/jaafourima/hud/milestones).
+> **Status: early development.** M0 (foundations) is done; M1 (core, local store, desktop shell, weight tracking) is in review. See the [milestones](https://github.com/jaafourima/hud/milestones).
 
 ## Goals
 
@@ -28,7 +28,7 @@ Workspace: `crates/` (core, store, sync, server, ui), `apps/` (desktop, android,
 | | Milestone |
 |---|---|
 | M0 | Reset, license, CI, ADRs (done) |
-| M1 | Core, local store, desktop shell, weight tracking |
+| M1 | Core, local store, desktop shell, weight tracking (in review) |
 | M2 | Server, auth, sync, Grafana connection |
 | M3 | Sleep (toggleable sources) |
 | M4 | Workouts |
@@ -43,9 +43,12 @@ Workspace: `crates/` (core, store, sync, server, ui), `apps/` (desktop, android,
 
 ```sh
 cargo fmt --all --check
-cargo clippy --workspace --all-targets -- -D warnings
-cargo test --workspace
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+cargo test --workspace --all-features
+cargo run -p hud-desktop   # needs webkit2gtk-4.1, gtk3 and libxdo (Arch: webkit2gtk-4.1 gtk3 xdotool)
 ```
+
+Data lives in `$HUD_DATA_DIR`, else `$XDG_DATA_HOME/hud`, else `~/.local/share/hud`.
 
 ## License
 

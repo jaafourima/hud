@@ -11,7 +11,17 @@ rust-version.workspace = true
 workspace = true
 
 [dependencies]
+chrono = { version = "0.4.45", default-features = false, features = ["clock", "std"], optional = true }
+dioxus = { version = "0.7", optional = true }
 hud-core = { version = "0.1.0", path = "../../crates/hud-core" }
 hud-store = { version = "0.1.0", path = "../../crates/hud-store" }
+hud-ui = { version = "0.1.0", path = "../../crates/hud-ui", optional = true }
 serde_json = "1.0.154"
 thiserror = "2.0.21"
+
+[features]
+# The page shown in the desktop/Android app. Off for headless uses (server, tests of the data layer).
+ui = ["dep:dioxus", "dep:chrono", "dep:hud-ui"]
+
+[dev-dependencies]
+dioxus-ssr = "0.7"

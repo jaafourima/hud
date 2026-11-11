@@ -1,0 +1,15 @@
+[package]
+name = "hud-ui"
+description = "Dioxus shell for hud: navigation and the plugin page registry"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+dioxus = "0.7"
+hud-store = { version = "0.1.0", path = "../hud-store" }

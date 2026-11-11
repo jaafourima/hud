@@ -1,8 +1,6 @@
 //! Body plugin: weight and body-fat measurements, plus a smoothed weight trend.
 
-use hud_core::{
-    EntityDef, Manifest, Migration, Plugin, RecordId, SettingDef, SettingKind, SqlView,
-};
+use hud_core::{EntityDef, Manifest, Migration, Plugin, RecordId, SqlView};
 use hud_store::Store;
 use serde_json::{Value, json};
 
@@ -38,22 +36,6 @@ impl Plugin for Body {
             version: env!("CARGO_PKG_VERSION"),
             depends_on: &[],
         }
-    }
-    fn settings(&self) -> Vec<SettingDef> {
-        vec![
-            SettingDef {
-                key: "weight_unit",
-                label: "Weight unit (kg or lb)",
-                kind: SettingKind::Text,
-                default: json!("kg"),
-            },
-            SettingDef {
-                key: "trend_smoothing",
-                label: "Trend smoothing (0.05 smooth .. 1 raw)",
-                kind: SettingKind::Number,
-                default: json!(0.1),
-            },
-        ]
     }
     fn entities(&self) -> &'static [EntityDef] {
         &ENTITIES
@@ -188,6 +170,53 @@ pub fn trend(weights: &[f64], alpha: f64) -> Vec<f64> {
     out
 }
 
+#[cfg(feature = "ui")]
+pub mod ui;
+
+/// Chart geometry in a `width` x `height` box: raw readings and the smoothed trend,
+/// x by time and y by weight. Returns `None` with no weight readings.
+pub struct Chart {
+    pub raw: Vec<(f64, f64)>,
+    pub trend: Vec<(f64, f64)>,
+    pub min_kg: f64,
+    pub max_kg: f64,
+}
+
+pub fn chart(history: &[Measurement], alpha: f64, width: f64, height: f64) -> Option<Chart> {
+    let pts: Vec<(i64, f64)> = history
+        .iter()
+        .filter_map(|m| m.weight_kg.map(|w| (m.measured_at, w)))
+        .collect();
+    let (first, last) = (pts.first()?.0, pts.last()?.0);
+    let weights: Vec<f64> = pts.iter().map(|p| p.1).collect();
+    let smooth = trend(&weights, alpha);
+    let lo = weights.iter().copied().fold(f64::INFINITY, f64::min);
+    let hi = weights.iter().copied().fold(f64::NEG_INFINITY, f64::max);
+    let (min_kg, max_kg) = if hi - lo < 1.0 {
+        (lo - 0.5, hi + 0.5)
+    } else {
+        (lo, hi)
+    };
+    let x = |t: i64| {
+        if last == first {
+            width / 2.0
+        } else {
+            (t - first) as f64 / (last - first) as f64 * width
+        }
+    };
+    let y = |w: f64| height - (w - min_kg) / (max_kg - min_kg) * height;
+    Some(Chart {
+        raw: pts.iter().map(|&(t, w)| (x(t), y(w))).collect(),
+        trend: pts
+            .iter()
+            .zip(&smooth)
+            .map(|(&(t, _), &w)| (x(t), y(w)))
+            .collect(),
+        min_kg,
+        max_kg,
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use hud_core::Registry;
@@ -243,6 +272,28 @@ mod tests {
             Err(Error::BadBodyFat)
         ));
         assert!(history(&s).unwrap().is_empty());
+    }
+
+    #[test]
+    fn chart_scales_time_and_weight_into_the_box() {
+        assert!(chart(&[], 0.1, 100.0, 50.0).is_none());
+        let h = [
+            Measurement::new(0, Some(80.0), None, None),
+            Measurement::new(10, None, Some(20.0), None), // no weight: not plotted
+            Measurement::new(100, Some(90.0), None, None),
+        ];
+        let c = chart(&h, 1.0, 200.0, 100.0).unwrap();
+        assert_eq!(
+            c.raw,
+            vec![(0.0, 100.0), (200.0, 0.0)],
+            "lightest bottom-left, heaviest top-right"
+        );
+        let one = chart(&h[..1], 0.1, 200.0, 100.0).unwrap();
+        assert_eq!(
+            one.raw,
+            vec![(100.0, 50.0)],
+            "a single reading sits in the middle"
+        );
     }
 
     #[test]

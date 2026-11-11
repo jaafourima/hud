@@ -1,0 +1,29 @@
+:root { color-scheme: light dark; --bg: #fafafa; --fg: #1c1c1e; --muted: #6b6b70; --card: #fff;
+        --line: #dcdce0; --accent: #2f6fed; --danger: #c0392b; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #151517; --fg: #ececee; --muted: #9a9aa0; --card: #1f1f22; --line: #333338; --accent: #6b9bff; --danger: #ff7b6b; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.45 system-ui, sans-serif; }
+.shell { display: grid; grid-template-columns: 180px 1fr; min-height: 100vh; }
+nav { padding: 16px 12px; border-right: 1px solid var(--line); display: flex; flex-direction: column; gap: 4px; }
+nav h1 { font-size: 20px; margin: 0 8px 12px; letter-spacing: .04em; }
+nav button { text-align: left; padding: 8px 10px; border: 0; border-radius: 6px; background: none; color: inherit; font: inherit; cursor: pointer; }
+nav button:hover { background: var(--card); }
+nav button.active { background: var(--accent); color: #fff; }
+main { padding: 24px; max-width: 860px; }
+h2 { margin: 0 0 16px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+.muted { color: var(--muted); }
+.error { color: var(--danger); margin: 8px 0 0; }
+form { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; }
+label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--muted); }
+input { padding: 7px 9px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--fg); font: inherit; }
+.primary { padding: 8px 16px; border: 0; border-radius: 6px; background: var(--accent); color: #fff; font: inherit; cursor: pointer; }
+.link { border: 0; background: none; color: var(--danger); cursor: pointer; font: inherit; }
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+svg.chart { width: 100%; height: auto; }
+.chart .raw { fill: var(--muted); }
+.chart .trend { fill: none; stroke: var(--accent); stroke-width: 2.5; }
+.chart .axis { fill: var(--muted); font-size: 11px; }
