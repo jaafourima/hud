@@ -161,13 +161,35 @@ impl Store {
         Ok(op)
     }
 
+    /// A small key-value store for app settings (server URL, sync cursor, ...). Not synced.
+    pub fn setting(&self, key: &str) -> Result<Option<String>> {
+        meta(&self.conn, &format!("setting:{key}"))
+    }
+
+    pub fn set_setting(&self, key: &str, value: &str) -> Result<()> {
+        set_meta(&self.conn, &format!("setting:{key}"), value)
+    }
+
+    pub fn clear_setting(&self, key: &str) -> Result<()> {
+        self.conn.execute(
+            "DELETE FROM _meta WHERE key = ?1",
+            params![format!("setting:{key}")],
+        )?;
+        Ok(())
+    }
+
     /// Apply ops received from the server. Returns how many changed local state.
     /// Safe to call with ops in any order, with duplicates, or ones already applied.
+    /// Ops for entities this build has no plugin for are skipped, not errors: another
+    /// device may run plugins this one lacks.
+    // ponytail: skipped ops are not replayed if the plugin is added later; reset the sync cursor to 0 then.
     pub fn apply_remote(&mut self, ops: &[Op]) -> Result<usize> {
         let tx = self.conn.transaction()?;
         let mut applied = 0;
         for op in ops {
-            let def = *entity_def(&self.registry, &op.entity)?;
+            let Ok(def) = entity_def(&self.registry, &op.entity).copied() else {
+                continue;
+            };
             self.clock.observe_now(&op.hlc);
             applied += usize::from(apply_op(&tx, &def, op)?);
         }

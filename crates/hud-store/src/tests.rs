@@ -124,6 +124,28 @@ fn local_delete_removes_the_row_and_is_queued() {
 }
 
 #[test]
+fn settings_roundtrip_and_clear() {
+    let s = store();
+    assert_eq!(s.setting("sync.url").unwrap(), None);
+    s.set_setting("sync.url", "https://a").unwrap();
+    s.set_setting("sync.url", "https://b").unwrap();
+    assert_eq!(s.setting("sync.url").unwrap().as_deref(), Some("https://b"));
+    s.clear_setting("sync.url").unwrap();
+    assert_eq!(s.setting("sync.url").unwrap(), None);
+}
+
+#[test]
+fn remote_ops_for_unknown_entities_are_skipped_not_fatal() {
+    let mut s = store();
+    let id = RecordId::new();
+    let mut stray = remote(id, item("x", 1), false, FAR_FUTURE);
+    stray.entity = "other_plugin_thing".into();
+    let known = remote(RecordId::new(), item("ok", 2), false, FAR_FUTURE);
+    assert_eq!(s.apply_remote(&[stray, known.clone()]).unwrap(), 1);
+    assert!(s.get("test_item", known.record_id).unwrap().is_some());
+}
+
+#[test]
 fn rejects_unknown_entities_and_fields() {
     let mut s = store();
     assert!(matches!(
