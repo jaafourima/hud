@@ -1,0 +1,41 @@
+{
+  "title": "hud: Body",
+  "uid": "hud-body",
+  "schemaVersion": 39,
+  "version": 1,
+  "time": { "from": "now-90d", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "Weight (kg)",
+      "gridPos": { "x": 0, "y": 0, "w": 24, "h": 9 },
+      "datasource": { "type": "postgres", "uid": "hud" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "time_series",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT time, weight_kg AS \"weight\" FROM grafana.body_measurements WHERE weight_kg IS NOT NULL AND $__timeFilter(time) ORDER BY time"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "Body fat (%)",
+      "gridPos": { "x": 0, "y": 9, "w": 24, "h": 9 },
+      "datasource": { "type": "postgres", "uid": "hud" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "time_series",
+          "rawQuery": true,
+          "editorMode": "code",
+          "rawSql": "SELECT time, body_fat_pct AS \"body fat\" FROM grafana.body_measurements WHERE body_fat_pct IS NOT NULL AND $__timeFilter(time) ORDER BY time"
+        }
+      ]
+    }
+  ]
+}

@@ -2,7 +2,7 @@
 
 A self-hosted, plugin-based status window for your life: sleep, workouts, meals and calories, weight, phone and PC usage, habits, and whatever else you add. Local-first apps, one server you own, your data in Postgres where Grafana can read it.
 
-> **Status: early development.** M0 (foundations) is done; M1 (core, local store, desktop shell, weight tracking) is in review. See the [milestones](https://github.com/jaafourima/hud/milestones).
+> **Status: early development.** M0 (foundations) and M1 (core, local store, desktop shell, weight tracking) are done; M2 (server, accounts, sync, Grafana) is in review. See the [milestones](https://github.com/jaafourima/hud/milestones).
 
 ## Goals
 
@@ -28,8 +28,8 @@ Workspace: `crates/` (core, store, sync, server, ui), `apps/` (desktop, android,
 | | Milestone |
 |---|---|
 | M0 | Reset, license, CI, ADRs (done) |
-| M1 | Core, local store, desktop shell, weight tracking (in review) |
-| M2 | Server, auth, sync, Grafana connection |
+| M1 | Core, local store, desktop shell, weight tracking (done) |
+| M2 | Server, accounts, sync, Grafana connection (in review) |
 | M3 | Sleep (toggleable sources) |
 | M4 | Workouts |
 | M5 | Nutrition (barcode, recipes, adaptive target) |
@@ -39,14 +39,36 @@ Workspace: `crates/` (core, store, sync, server, ui), `apps/` (desktop, android,
 | M9 | Habits |
 | M10 | AI meal photos, sensor-based sleep |
 
+## Run your own server
+
+```sh
+cd deploy && cp .env.example .env     # set POSTGRES_PASSWORD and GRAFANA_ADMIN_PASSWORD (hex: openssl rand -hex 24)
+docker compose up -d --build          # hud-server :8080, Postgres (internal only), Grafana :3000
+```
+
+The server listens on plain HTTP, bound to `HUD_BIND_ADDR` (default this machine). Reach it from your other devices over Tailscale/WireGuard, or put a TLS reverse proxy in front.
+
+1. In the desktop app open **Sync**, enter the server address, tick *Create a new account* and connect. The first account can always be created; set `HUD_ALLOW_REGISTRATION=true` to let others sign up. Other devices connect with the same username and password. Changes sync every 30 seconds.
+2. For dashboards: `python3 deploy/grafana_access.py http://localhost:8080 <username>` prints a read-only Postgres login that only sees your own data. Put the two lines in `deploy/.env` and run `docker compose up -d grafana`; the *hud: Body* dashboard is provisioned automatically.
+
+Design notes: [sync](docs/adr/0003-sync.md), [isolation and access](docs/adr/0005-data-isolation-and-access.md).
+
 ## Development
 
 ```sh
 cargo fmt --all --check
 cargo clippy --workspace --all-targets --all-features -- -D warnings
-cargo test --workspace --all-features
+cargo test --workspace --all-features   # server tests need Postgres: see below
 cargo run -p hud-desktop   # needs webkit2gtk-4.1, gtk3 and libxdo (Arch: webkit2gtk-4.1 gtk3 xdotool)
 ```
+
+Server and client integration tests create throwaway databases; point them at any Postgres where the user can create databases and roles:
+
+```sh
+HUD_TEST_DATABASE_URL=postgres://user:password@127.0.0.1:5432 cargo test --workspace --all-features
+```
+
+Without that variable those tests print a notice and pass, so plain `cargo test` still works.
 
 Data lives in `$HUD_DATA_DIR`, else `$XDG_DATA_HOME/hud`, else `~/.local/share/hud`.
 
