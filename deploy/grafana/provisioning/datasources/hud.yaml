@@ -1,0 +1,13 @@
+apiVersion: 1
+datasources:
+  - name: hud
+    uid: hud
+    type: postgres
+    url: postgres:5432
+    user: ${HUD_GRAFANA_DB_USER}
+    secureJsonData:
+      password: ${HUD_GRAFANA_DB_PASSWORD}
+    jsonData:
+      database: hud
+      sslmode: disable
+      postgresVersion: 1700

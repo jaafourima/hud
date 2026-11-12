@@ -11,5 +11,12 @@ rust-version.workspace = true
 workspace = true
 
 [dependencies]
+chrono = { version = "0.4.45", default-features = false, features = ["clock", "std"] }
 dioxus = "0.7"
+hud-client = { version = "0.1.0", path = "../hud-client" }
 hud-store = { version = "0.1.0", path = "../hud-store" }
+tokio = { version = "1.54.1", features = ["time"] }
+
+[dev-dependencies]
+dioxus-ssr = "0.7"
+hud-core = { path = "../hud-core" }

@@ -1,0 +1,28 @@
+[package]
+name = "hud-client"
+description = "hud client-side sync: pairing with a server and the push/pull loop"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+hud-core = { version = "0.1.0", path = "../hud-core" }
+hud-store = { version = "0.1.0", path = "../hud-store" }
+hud-sync = { version = "0.1.0", path = "../hud-sync" }
+reqwest = { version = "0.13.5", features = ["json"] }
+serde = "1.0.229"
+serde_json = "1.0.154"
+thiserror = "2.0.21"
+tokio = { version = "1.54.1", features = ["rt", "macros", "rt-multi-thread", "net"] }
+
+[dev-dependencies]
+axum = "0.8.9"
+hud-plugin-body = { path = "../../plugins/body" }
+hud-server = { path = "../hud-server" }
+tokio-postgres = "0.7.18"
+uuid = "1.29.2"

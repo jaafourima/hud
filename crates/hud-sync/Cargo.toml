@@ -1,0 +1,15 @@
+[package]
+name = "hud-sync"
+description = "Wire protocol shared by hud clients and the server"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+hud-core = { version = "0.1.0", path = "../hud-core" }
+serde = { version = "1.0.229", features = ["derive"] }

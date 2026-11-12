@@ -23,9 +23,19 @@ static MIGRATIONS: [Migration; 1] = [Migration {
           CREATE INDEX body_measurement_time ON body_measurement(measured_at);",
 }];
 
+static SERVER_MIGRATIONS: [Migration; 1] = [Migration {
+    version: 1,
+    sql: "CREATE TABLE body_measurement(
+              user_id uuid NOT NULL, id uuid NOT NULL, hlc text NOT NULL, device_id uuid NOT NULL,
+              measured_at bigint NOT NULL,  -- unix seconds, UTC
+              weight_kg double precision, body_fat_pct double precision, note text,
+              PRIMARY KEY (user_id, id));
+          CREATE INDEX body_measurement_time ON body_measurement(user_id, measured_at);",
+}];
+
 static VIEWS: [SqlView; 1] = [SqlView {
     name: "body_measurements",
-    sql: "SELECT id, to_timestamp(measured_at) AS time, weight_kg, body_fat_pct FROM body_measurement",
+    sql: "SELECT user_id, id, to_timestamp(measured_at) AS time, weight_kg, body_fat_pct FROM body_measurement",
 }];
 
 impl Plugin for Body {
@@ -42,6 +52,9 @@ impl Plugin for Body {
     }
     fn migrations(&self) -> &'static [Migration] {
         &MIGRATIONS
+    }
+    fn server_migrations(&self) -> &'static [Migration] {
+        &SERVER_MIGRATIONS
     }
     fn grafana_views(&self) -> &'static [SqlView] {
         &VIEWS

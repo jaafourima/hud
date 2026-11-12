@@ -1,0 +1,55 @@
+name: hud
+
+services:
+  postgres:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: hud # superuser: hud-server creates roles and tables with it
+      POSTGRES_DB: hud
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hud -d hud"]
+      interval: 5s
+      retries: 10
+    # Not published to the host: only hud-server and Grafana (same compose network) connect.
+
+  hud-server:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      HUD_DATABASE_URL: postgres://hud:${POSTGRES_PASSWORD}@postgres/hud
+      HUD_LISTEN: 0.0.0.0:8080
+      HUD_ALLOW_REGISTRATION: ${HUD_ALLOW_REGISTRATION:-false}
+      HUD_GRAFANA_DB_HOST: postgres
+    ports:
+      # Plain HTTP: bind to a LAN/VPN address or put a TLS reverse proxy in front.
+      - "${HUD_BIND_ADDR:-127.0.0.1}:8080:8080"
+
+  grafana:
+    image: grafana/grafana:11.4.0
+    restart: unless-stopped
+    depends_on:
+      - hud-server
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?set in .env}
+      # From `python3 deploy/grafana_access.py` (see README); empty until you have run it.
+      HUD_GRAFANA_DB_USER: ${HUD_GRAFANA_DB_USER:-}
+      HUD_GRAFANA_DB_PASSWORD: ${HUD_GRAFANA_DB_PASSWORD:-}
+    volumes:
+      - grafanadata:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "${HUD_BIND_ADDR:-127.0.0.1}:3000:3000"
+
+volumes:
+  pgdata:
+  grafanadata:

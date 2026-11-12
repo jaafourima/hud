@@ -3,7 +3,7 @@
 use chrono::{Local, NaiveDateTime, TimeZone};
 use dioxus::prelude::*;
 use hud_store::Store;
-use hud_ui::{Page, use_store};
+use hud_ui::{Page, use_data_version, use_store};
 
 use crate::{Measurement, chart, history, remove, save};
 
@@ -21,7 +21,7 @@ const INPUT_FORMAT: &str = "%Y-%m-%dT%H:%M"; // what <input type="datetime-local
 
 fn body_page() -> Element {
     let store = use_store();
-    let mut version = use_signal(|| 0u32); // bump to reload history after a write
+    let data = use_data_version(); // bumped after any write or sync, so history reloads
     let mut when = use_signal(|| Local::now().format(INPUT_FORMAT).to_string());
     let mut weight = use_signal(String::new);
     let mut fat = use_signal(String::new);
@@ -31,7 +31,7 @@ fn body_page() -> Element {
     let rows = use_memo({
         let store = store.clone();
         move || {
-            version();
+            data.get();
             history(&store.lock()).unwrap_or_default()
         }
     });
@@ -46,7 +46,7 @@ fn body_page() -> Element {
                     fat.set(String::new());
                     note.set(String::new());
                     error.set(None);
-                    version += 1;
+                    data.bump();
                 }
                 Err(msg) => error.set(Some(msg)),
             }
@@ -147,7 +147,7 @@ fn body_page() -> Element {
                                         move |_| {
                                             // ponytail: a failed delete is silent; surface it once there is a toast area.
                                             let _ = remove(&mut store.lock(), id);
-                                            version += 1;
+                                            data.bump();
                                         }
                                     },
                                     "Delete"
