@@ -17,6 +17,16 @@ macro_rules! id_type {
                 Self(Uuid::now_v7())
             }
         }
+        impl $name {
+            pub fn as_uuid(&self) -> Uuid {
+                self.0
+            }
+        }
+        impl From<Uuid> for $name {
+            fn from(u: Uuid) -> Self {
+                Self(u)
+            }
+        }
         impl Default for $name {
             fn default() -> Self {
                 Self::new()

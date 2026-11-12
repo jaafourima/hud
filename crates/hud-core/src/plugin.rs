@@ -64,6 +64,13 @@ pub trait Plugin: Send + Sync + 'static {
     fn entities(&self) -> &'static [EntityDef];
     /// Local SQLite migrations, applied in `version` order.
     fn migrations(&self) -> &'static [Migration];
+    /// Postgres migrations for the server. Each entity table must have `user_id uuid NOT NULL`
+    /// and primary key `(user_id, id)`; the server adds row-level security and grants itself.
+    fn server_migrations(&self) -> &'static [Migration] {
+        &[]
+    }
+    /// Grafana views. The SQL must select `user_id`; the server restricts rows to the
+    /// Grafana role's owner.
     fn grafana_views(&self) -> &'static [SqlView] {
         &[]
     }
