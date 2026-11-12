@@ -27,3 +27,8 @@ svg.chart { width: 100%; height: auto; }
 .chart .raw { fill: var(--muted); }
 .chart .trend { fill: none; stroke: var(--accent); stroke-width: 2.5; }
 .chart .axis { fill: var(--muted); font-size: 11px; }
+.row { display: flex; gap: 12px; align-items: center; }
+label.check { flex-direction: row; align-items: center; gap: 8px; color: var(--fg); }
+label.check input { width: auto; }
+button:disabled { opacity: .6; cursor: default; }
+form label { min-width: 200px; flex: 1 1 200px; }
