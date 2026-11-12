@@ -55,20 +55,31 @@ Design notes: [sync](docs/adr/0003-sync.md), [isolation and access](docs/adr/000
 
 ## Development
 
+Dependencies and configuration are managed with [devenv](https://devenv.sh) (Nix). `devenv.nix` provides the Rust toolchain, WebKitGTK/GTK for the desktop app, `cargo-deny`, and a local Postgres wired to the test suite.
+
+```sh
+devenv shell            # or `direnv allow` once: the shell loads automatically
+hud-check               # fmt, clippy, cargo-deny and all tests (starts nothing itself: run `devenv up -d` first)
+devenv test             # starts Postgres, then runs the full test suite
+devenv up               # Postgres + hud-server on 127.0.0.1:8080
+hud-desktop             # the desktop app
+```
+
+Without devenv you need Rust 1.89+, `webkit2gtk-4.1`, `gtk3` and `libxdo` (Arch: `webkit2gtk-4.1 gtk3 xdotool`), and a Postgres for the integration tests. CI does not use devenv; it runs the same commands on a plain Ubuntu runner:
+
 ```sh
 cargo fmt --all --check
 cargo clippy --workspace --all-targets --all-features -- -D warnings
-cargo test --workspace --all-features   # server tests need Postgres: see below
-cargo run -p hud-desktop   # needs webkit2gtk-4.1, gtk3 and libxdo (Arch: webkit2gtk-4.1 gtk3 xdotool)
+cargo test --workspace --all-features
 ```
 
-Server and client integration tests create throwaway databases; point them at any Postgres where the user can create databases and roles:
+Server and client integration tests create throwaway databases; point them at any Postgres where the user can create databases and roles (devenv sets this for you):
 
 ```sh
 HUD_TEST_DATABASE_URL=postgres://user:password@127.0.0.1:5432 cargo test --workspace --all-features
 ```
 
-Without that variable those tests print a notice and pass, so plain `cargo test` still works.
+Without that variable those tests print a notice and pass, so plain `cargo test` still works. A trust-auth dev database skips one password-rotation check, which CI's Postgres does enforce.
 
 Data lives in `$HUD_DATA_DIR`, else `$XDG_DATA_HOME/hud`, else `~/.local/share/hud`.
 

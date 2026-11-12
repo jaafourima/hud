@@ -3,3 +3,9 @@
 *.env
 *.db
 *.db-*
+
+# devenv / direnv
+.devenv/
+.direnv/
+devenv.local.nix
+.devenv.flake.nix

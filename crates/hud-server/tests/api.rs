@@ -653,6 +653,16 @@ async fn grafana_login_reads_only_the_owners_views() {
     // Asking again rotates the password; the old one stops working.
     let (_, new_pw) = grafana(ta.clone()).await;
     assert_ne!(alice_pw, new_pw);
-    assert!(tokio_postgres::connect(&alice_url, NoTls).await.is_err());
+    // Needs a Postgres that enforces passwords (CI's does). A trust-auth dev database accepts
+    // any password, so check that first and say so rather than fail for the wrong reason.
+    let wrong = alice_url.replacen(&alice_pw, "definitely-wrong", 1);
+    if tokio_postgres::connect(&wrong, NoTls).await.is_ok() {
+        eprintln!("test Postgres uses trust auth: skipping the old-password-rejected check");
+    } else {
+        assert!(
+            tokio_postgres::connect(&alice_url, NoTls).await.is_err(),
+            "old password must stop working"
+        );
+    }
     h.cleanup().await;
 }
